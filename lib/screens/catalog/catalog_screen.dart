@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:optica_app/core/services/category_service.dart';
 import 'package:optica_app/models/category_model.dart';
-import 'package:optica_app/screens/catalog/category_products_screen.dart'; // Añade esta importación
+import 'package:optica_app/screens/catalog/category_products_screen.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -45,33 +45,36 @@ class _CatalogScreenState extends State<CatalogScreen> {
     }
   }
 
-  IconData _getCategoryIcon(String categoryName) {
-    switch (categoryName.toLowerCase()) {
-      case 'monturas':
-        return Icons.account_balance;
-      case 'lentes contacto':
-        return Icons.visibility;
-      case 'accesorios':
-        return Icons.shopping_bag;
-      default:
-        return Icons.category;
-    }
-  }
-
   Color _getCategoryColor(String categoryName) {
     switch (categoryName.toLowerCase()) {
       case 'monturas':
-        return Colors.blue;
+        return const Color(0xFF2196F3); // Azul
       case 'lentes contacto':
-        return Colors.green;
+        return const Color(0xFF4CAF50); // Verde
       case 'accesorios':
-        return Colors.orange;
+        return const Color(0xFFFF9800); // Naranja
+      case 'gafas':
+        return const Color(0xFF9C27B0); // Púrpura
       default:
-        return Colors.purple;
+        return const Color(0xFF673AB7); // Deep Purple
     }
   }
 
-  // Método para navegar a productos de la categoría
+  String _getCategoryIcon(String categoryName) {
+    switch (categoryName.toLowerCase()) {
+      case 'monturas':
+        return '👓';
+      case 'lentes contacto':
+        return '👁️';
+      case 'accesorios':
+        return '👜';
+      case 'gafas':
+        return '🕶️';
+      default:
+        return '📦';
+    }
+  }
+
   void _navigateToCategoryProducts(Category category) {
     Navigator.push(
       context,
@@ -81,13 +84,117 @@ class _CatalogScreenState extends State<CatalogScreen> {
     );
   }
 
+  Widget _buildCategoryCard(Category category) {
+    final categoryColor = _getCategoryColor(category.nombre);
+    final categoryIcon = _getCategoryIcon(category.nombre);
+
+    return GestureDetector(
+      onTap: () => _navigateToCategoryProducts(category),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        height: 160,
+        decoration: BoxDecoration(
+          color: categoryColor.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Fondo con degradado
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    categoryColor.withOpacity(0.8),
+                    categoryColor.withOpacity(0.95),
+                  ],
+                ),
+              ),
+            ),
+            
+            // Icono decorativo (opaco)
+            Positioned(
+              right: 20,
+              top: 20,
+              child: Text(
+                categoryIcon,
+                style: const TextStyle(
+                  fontSize: 48,
+                  
+                ),
+              ),
+            ),
+            
+            // Contenido sobre la imagen
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Nombre de la categoría
+                  Text(
+                    category.nombre,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  
+                  // Descripción
+                  if (category.descripcion.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      category.descripcion,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                                    
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Catálogo'),
+        title: const Text(
+          'Catálogo',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -97,7 +204,11 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
+        ),
+      );
     }
 
     if (_error.isNotEmpty) {
@@ -107,18 +218,40 @@ class _CatalogScreenState extends State<CatalogScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Error al cargar categorías',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
               ),
               const SizedBox(height: 8),
-              Text(_error, textAlign: TextAlign.center),
+              Text(
+                _error,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey),
+              ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _loadCategories,
-                child: const Text('Reintentar'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2E7D32),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Reintentar',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -127,87 +260,80 @@ class _CatalogScreenState extends State<CatalogScreen> {
     }
 
     if (_categories.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.category, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
+            const Icon(
+              Icons.category_outlined,
+              size: 72,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 20),
+            const Text(
               'No hay categorías disponibles',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+            ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Las categorías se agregarán próximamente',
+              style: TextStyle(color: Colors.grey),
             ),
           ],
         ),
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Título y descripción
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Catálogo',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 'Selecciona una categoría para ver los productos',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey[700],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 32),
-          Expanded(
-            child: ListView.separated(
+        ),
+        
+        // Lista de categorías
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _loadCategories,
+            color: const Color(0xFF2E7D32),
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 20),
               itemCount: _categories.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final category = _categories[index];
-                final icon = _getCategoryIcon(category.nombre);
-                final color = _getCategoryColor(category.nombre);
-
-                return GestureDetector(
-                  onTap: () => _navigateToCategoryProducts(category),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: color.withOpacity(0.2),
-                        child: Icon(icon, color: color),
-                      ),
-                      title: Text(
-                        category.nombre,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(category.descripcion),
-                      trailing: const Icon(Icons.chevron_right),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                );
+                return _buildCategoryCard(category);
               },
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

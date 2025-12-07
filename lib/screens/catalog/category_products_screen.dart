@@ -3,14 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:optica_app/models/category_model.dart';
 import 'package:optica_app/core/services/product_service.dart';
 import 'package:optica_app/models/product_model.dart';
-import 'package:optica_app/screens/catalog/product_datail_screen.dart';
 
 class CategoryProductsScreen extends StatefulWidget {
   final Category category;
+  final Function(Product)? onProductSelected;
   
   const CategoryProductsScreen({
     super.key,
     required this.category,
+    this.onProductSelected,
   });
 
   @override
@@ -87,15 +88,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     }
   }
 
-  void _navigateToProductDetail(Product product) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProductDetailScreen(product: product),
-      ),
-    );
-  }
-
   Widget _buildSearchBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -128,7 +120,11 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
 
   Widget _buildProductCard(Product product) {
     return GestureDetector(
-      onTap: () => _navigateToProductDetail(product),
+      onTap: () {
+        if (widget.onProductSelected != null) {
+          widget.onProductSelected!(product);
+        }
+      },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         decoration: BoxDecoration(
@@ -229,26 +225,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.category.nombre,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: _buildBody(),
-    );
+    return _buildBody(); // ← CAMBIO CLAVE: Solo retorna el body
   }
 
   Widget _buildBody() {
@@ -340,6 +317,8 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Barra de búsqueda
+        _buildSearchBar(),
         // Contador de productos
         Container(
           padding: const EdgeInsets.only(left: 20, top: 16, bottom: 8),
@@ -352,9 +331,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
             ),
           ),
         ),
-        
-        // Barra de búsqueda
-        _buildSearchBar(),
         
         // Lista de productos en 2 columnas o mensaje de no resultados
         Expanded(

@@ -1,12 +1,13 @@
+// app.dart
 import 'package:flutter/material.dart';
-import 'package:optica_app/screens/home/home_screen.dart';
+import 'package:optica_app/screens/main_layout_screen.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Ir directo al HomeScreen (sin verificar autenticación)
-    return const HomeScreen();
+    // Usar MainLayoutScreen como pantalla principal
+    return const MainLayoutScreen();
   }
 }

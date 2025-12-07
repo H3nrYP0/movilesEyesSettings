@@ -1,13 +1,13 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:optica_app/app.dart';
 import 'package:optica_app/providers/auth_provider.dart';
 import 'package:optica_app/providers/cart_provider.dart';
 import 'package:optica_app/screens/auth/login_screen.dart';
 import 'package:optica_app/screens/auth/register_screen.dart';
-import 'package:optica_app/screens/home/home_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:optica_app/providers/category_provider.dart';
-import 'package:optica_app/screens/catalog/catalog_screen.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -39,10 +39,9 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => const App(),
+          // Mantener estas rutas para acceso directo si es necesario
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
-          '/home': (context) => const HomeScreen(),
-           '/catalog': (context) => const CatalogScreen(),
         },
       ),
     );

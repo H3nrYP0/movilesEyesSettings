@@ -2,10 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:optica_app/core/services/category_service.dart';
 import 'package:optica_app/models/category_model.dart';
-import 'package:optica_app/screens/catalog/category_products_screen.dart';
 
 class CatalogScreen extends StatefulWidget {
-  const CatalogScreen({super.key});
+  final Function(Category)? onCategorySelected;
+  
+  const CatalogScreen({
+    super.key,
+    this.onCategorySelected,
+  });
 
   @override
   State<CatalogScreen> createState() => _CatalogScreenState();
@@ -75,21 +79,16 @@ class _CatalogScreenState extends State<CatalogScreen> {
     }
   }
 
-  void _navigateToCategoryProducts(Category category) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CategoryProductsScreen(category: category),
-      ),
-    );
-  }
-
   Widget _buildCategoryCard(Category category) {
     final categoryColor = _getCategoryColor(category.nombre);
     final categoryIcon = _getCategoryIcon(category.nombre);
 
     return GestureDetector(
-      onTap: () => _navigateToCategoryProducts(category),
+      onTap: () {
+        if (widget.onCategorySelected != null) {
+          widget.onCategorySelected!(category);
+        }
+      },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         height: 160,
@@ -129,7 +128,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 categoryIcon,
                 style: const TextStyle(
                   fontSize: 48,
-                  
                 ),
               ),
             ),
@@ -141,7 +139,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  
                   const SizedBox(height: 12),
                   
                   // Nombre de la categoría
@@ -168,7 +165,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                                    
                 ],
               ),
             ),
@@ -180,26 +176,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Catálogo',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: _buildBody(),
-    );
+    return _buildBody(); // ← CAMBIO CLAVE: Solo retorna el body
   }
 
   Widget _buildBody() {
@@ -276,7 +253,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey,
-            ),
+              ),
             ),
             const SizedBox(height: 10),
             const Text(
@@ -297,14 +274,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Catálogo',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
               const SizedBox(height: 8),
               Text(
                 'Selecciona una categoría para ver los productos',

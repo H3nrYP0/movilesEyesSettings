@@ -1,31 +1,34 @@
 // screens/widgets/app_drawer.dart
 import 'package:flutter/material.dart';
-import 'package:optica_app/screens/auth/login_screen.dart';
-import 'package:optica_app/screens/auth/register_screen.dart';
-import 'package:optica_app/screens/catalog/catalog_screen.dart';
-import 'package:optica_app/screens/profile/profile_screen.dart';
-import 'package:optica_app/screens/orders/orders_screen.dart';
-import 'package:optica_app/screens/appointments/agenda_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:optica_app/providers/auth_provider.dart';
 
 class AppDrawer extends StatelessWidget {
-  const AppDrawer({super.key});
+  final Function(String) onItemSelected;
+  
+  const AppDrawer({
+    super.key,
+    required this.onItemSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           // Header del drawer
-          const DrawerHeader(
-            decoration: BoxDecoration(
+          DrawerHeader(
+            decoration: const BoxDecoration(
               color: Colors.blue,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                CircleAvatar(
+                const CircleAvatar(
                   backgroundColor: Colors.white,
                   radius: 30,
                   child: Icon(
@@ -34,18 +37,22 @@ class AppDrawer extends StatelessWidget {
                     color: Colors.blue,
                   ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Text(
-                  'Eyes Settings',
-                  style: TextStyle(
+                  authProvider.isAuthenticated 
+                    ? '¡Hola, ${authProvider.user?.nombre.split(' ').first}!' 
+                    : 'Eyes Settings',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  'Tu óptica de confianza',
-                  style: TextStyle(
+                  authProvider.isAuthenticated 
+                    ? authProvider.user?.correo ?? ''
+                    : 'Tu óptica de confianza',
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                   ),
@@ -56,124 +63,62 @@ class AppDrawer extends StatelessWidget {
           
           // Opciones del menú
           _buildDrawerItem(
-            context,
             icon: Icons.home,
             title: 'Inicio',
-            onTap: () => Navigator.pop(context),
+            onTap: () => onItemSelected('home'),
           ),
           
           _buildDrawerItem(
-            context,
             icon: Icons.store,
-            title: 'Ver Catálogo',
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CatalogScreen()),
-              );
-            },
+            title: 'Catálogo',
+            onTap: () => onItemSelected('catalog'),
           ),
           
+          // Opciones que requieren autenticación
           _buildDrawerItem(
-            context,
             icon: Icons.person,
             title: 'Perfil',
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              );
-            },
+            onTap: () => onItemSelected('profile'),
           ),
           
           _buildDrawerItem(
-            context,
             icon: Icons.shopping_bag,
             title: 'Pedidos',
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const OrdersScreen()),
-              );
-            },
+            onTap: () => onItemSelected('orders'),
           ),
           
           _buildDrawerItem(
-            context,
             icon: Icons.calendar_today,
             title: 'Agenda',
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AgendaScreen()),
-              );
-            },
+            onTap: () => onItemSelected('agenda'),
           ),
           
           const Divider(),
           
-          // Sección de autenticación
-          _buildDrawerItem(
-            context,
-            icon: Icons.login,
-            title: 'Iniciar sesión',
-            color: Colors.blue,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
-            },
-          ),
-          
-          _buildDrawerItem(
-            context,
-            icon: Icons.person_add,
-            title: 'Registrarse',
-            color: Colors.green,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const RegisterScreen()),
-              );
-            },
-          ),
-          
-          const Divider(),
-          
-          // Información adicional
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Contacto',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text('📞 (123) 456-7890'),
-                Text('✉️ info@eyessettings.com'),
-                Text('📍 Calle Principal #123'),
-              ],
+          // Botón de autenticación
+          if (authProvider.isAuthenticated)
+            _buildDrawerItem(
+              icon: Icons.logout,
+              title: 'Cerrar sesión',
+              color: Colors.red,
+              onTap: () {
+                authProvider.logout();
+                onItemSelected('home');
+              },
+            )
+          else
+            _buildDrawerItem(
+              icon: Icons.login,
+              title: 'Iniciar sesión',
+              color: Colors.blue,
+              onTap: () => onItemSelected('login'),
             ),
-          ),
         ],
       ),
     );
   }
   
-  Widget _buildDrawerItem(
-    BuildContext context, {
+  Widget _buildDrawerItem({
     required IconData icon,
     required String title,
     required VoidCallback onTap,
@@ -182,12 +127,12 @@ class AppDrawer extends StatelessWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: color ?? Theme.of(context).colorScheme.onSurface,
+        color: color,
       ),
       title: Text(
         title,
         style: TextStyle(
-          color: color ?? Theme.of(context).colorScheme.onSurface,
+          color: color,
         ),
       ),
       onTap: onTap,

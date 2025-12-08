@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:optica_app/core/services/category_service.dart';
 import 'package:optica_app/models/category_model.dart';
+import 'package:optica_app/screens/catalog/category_products_screen.dart';
 
 class CatalogScreen extends StatefulWidget {
   final Function(Category)? onCategorySelected;
@@ -85,10 +86,17 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
     return GestureDetector(
       onTap: () {
-        if (widget.onCategorySelected != null) {
-          widget.onCategorySelected!(category);
-        }
-      },
+  if (widget.onCategorySelected != null) {
+    widget.onCategorySelected!(category);
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CategoryProductsScreen(category: category),
+      ),
+    );
+  }
+},
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         height: 160,

@@ -1,4 +1,4 @@
-// screens/catalog/category_products_screen.dart
+// CORREGIDO - category_products_screen.dart
 import 'package:flutter/material.dart';
 import 'package:optica_app/models/category_model.dart';
 import 'package:optica_app/core/services/product_service.dart';
@@ -6,12 +6,11 @@ import 'package:optica_app/models/product_model.dart';
 
 class CategoryProductsScreen extends StatefulWidget {
   final Category category;
-  final Function(Product)? onProductSelected;
   
+  // CONSTRUCTOR CORREGIDO - sin onProductSelected
   const CategoryProductsScreen({
     super.key,
     required this.category,
-    this.onProductSelected,
   });
 
   @override
@@ -27,12 +26,19 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  @override
-  void initState() {
-    super.initState();
-    _loadProducts();
-    _searchController.addListener(_onSearchChanged);
-  }
+    // CORREGIDO: category_products_screen.dart
+    @override
+    void initState() {
+      super.initState();
+      _searchController.addListener(_onSearchChanged);
+      
+      // Espera a que el widget esté montado y la UI esté lista
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadProducts();
+        }
+      });
+    }
 
   @override
   void dispose() {
@@ -65,27 +71,47 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     });
   }
 
-  Future<void> _loadProducts() async {
-    setState(() {
-      _isLoading = true;
-      _error = '';
-    });
+  // También optimiza _loadProducts
+Future<void> _loadProducts() async {
+  if (!mounted) return;
+  
+  setState(() {
+    _isLoading = true;
+    _error = '';
+  });
 
-    try {
-      final products = await _productService.getProductsByCategory(widget.category.id);
+  await Future.delayed(const Duration(milliseconds: 100)); // Pequeño delay
+  
+  try {
+    final products = await _productService.getProductsByCategory(widget.category.id);
+    
+    if (mounted) {
       setState(() {
         _products = products;
         _filteredProducts = List.from(products);
       });
-    } catch (e) {
+    }
+  } catch (e) {
+    if (mounted) {
       setState(() {
         _error = 'Error al cargar productos: $e';
       });
-    } finally {
+    }
+  } finally {
+    if (mounted) {
       setState(() {
         _isLoading = false;
       });
     }
+  }
+}
+
+  void _navigateToProductDetail(Product product) {
+    Navigator.pushNamed(
+      context,
+      '/product-detail',
+      arguments: product,
+    );
   }
 
   Widget _buildSearchBar() {
@@ -120,11 +146,7 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
 
   Widget _buildProductCard(Product product) {
     return GestureDetector(
-      onTap: () {
-        if (widget.onProductSelected != null) {
-          widget.onProductSelected!(product);
-        }
-      },
+      onTap: () => _navigateToProductDetail(product), // ← Ahora usa este método
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         decoration: BoxDecoration(
@@ -142,7 +164,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Espacio para imagen (simulado)
             Container(
               height: 120,
               decoration: BoxDecoration(
@@ -160,7 +181,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
               ),
             ),
             
-            // Información del producto
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -179,7 +199,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                   ),
                   const SizedBox(height: 8),
                   
-                  // Precio
                   Text(
                     '\$${product.precioVenta.toStringAsFixed(0)}',
                     style: const TextStyle(
@@ -189,7 +208,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     ),
                   ),
                   
-                  // Estado de stock
                   const SizedBox(height: 6),
                   Row(
                     children: [
@@ -225,7 +243,27 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildBody(); // ← CAMBIO CLAVE: Solo retorna el body
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.category.nombre),
+        leading: Container(
+          margin: const EdgeInsets.only(left: 8),
+          child: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_rounded,
+              size: 22,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Colors.black87),
+      ),
+      body: _buildBody(),
+    );
   }
 
   Widget _buildBody() {
@@ -317,9 +355,8 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Barra de búsqueda
         _buildSearchBar(),
-        // Contador de productos
+        
         Container(
           padding: const EdgeInsets.only(left: 20, top: 16, bottom: 8),
           child: Text(
@@ -332,7 +369,6 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
           ),
         ),
         
-        // Lista de productos en 2 columnas o mensaje de no resultados
         Expanded(
           child: _filteredProducts.isEmpty && _searchQuery.isNotEmpty
               ? Center(
@@ -383,10 +419,10 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     child: GridView.builder(
                       physics: const AlwaysScrollableScrollPhysics(),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // 2 columnas
+                        crossAxisCount: 2,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
-                        childAspectRatio: 0.75, // Proporción tarjetas (ancho/alto)
+                        childAspectRatio: 0.75,
                       ),
                       itemCount: _filteredProducts.length,
                       itemBuilder: (context, index) {

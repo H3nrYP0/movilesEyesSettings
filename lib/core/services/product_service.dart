@@ -25,12 +25,21 @@ class ProductService {
   }
   
   // Obtener productos por categoría
+  // CORREGIDO: product_service.dart
   Future<List<Product>> getProductsByCategory(int categoryId) async {
     try {
-      final allProducts = await getProducts();
-      return allProducts.where((product) => product.categoriaId == categoryId).toList();
+      // Consulta DIRECTA por categoría en la API
+      final url = Uri.parse('$baseUrl/productos?categoria_id=$categoryId');
+      final response = await http.get(url);
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Product.fromJson(json)).toList();
+      } else {
+        throw Exception('Error al obtener productos por categoría: ${response.statusCode}');
+      }
     } catch (e) {
-      throw Exception('Error al obtener productos por categoría: $e');
+      throw Exception('Error de conexión: $e');
     }
   }
   

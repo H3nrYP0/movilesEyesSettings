@@ -14,6 +14,7 @@ import 'package:optica_app/screens/orders/orders_screen.dart';
 import 'package:optica_app/screens/appointments/agenda_screen.dart';
 import 'package:optica_app/models/category_model.dart';
 import 'package:optica_app/models/product_model.dart';
+import 'package:optica_app/screens/widgets/cart_floating_button.dart';
 
 class MainLayoutScreen extends StatefulWidget {
   const MainLayoutScreen({super.key});
@@ -192,9 +193,12 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           onItemSelected: _onDrawerItemSelected,
         ),
         body: _buildBody(),
+        floatingActionButton: const CartFloatingButton(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
       ),
     );
   }
+  
 
   // Widget optimizado para el body
   Widget _buildBody() {

@@ -1,58 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:optica_app/models/cart_item_model.dart';
 import 'package:optica_app/models/product_model.dart';
 
-class CartItem {
-  final Product product;
-  int quantity;
-  
-  CartItem({
-    required this.product,
-    this.quantity = 1,
-  });
-  
-  double get total => product.precioVenta * quantity;
-}
-
-class CartProvider with ChangeNotifier {
+class CartProvider extends ChangeNotifier {
   List<CartItem> _items = [];
   
-  List<CartItem> get items => _items;
-  int get itemCount => _items.length;
-  double get total => _items.fold(0, (sum, item) => sum + item.total);
+  List<CartItem> get items => List.unmodifiable(_items);
   
-  void addToCart(Product product, [int quantity = 1]) {
-    final index = _items.indexWhere((item) => item.product.id == product.id);
+  int get itemCount => _items.fold(0, (sum, item) => sum + item.quantity);
+  
+  double get totalAmount {
+    return _items.fold(0.0, (sum, item) => sum + item.subtotal);
+  }
+  
+  bool get isEmpty => _items.isEmpty;
+  
+  void addToCart(Product product) {
+    final existingIndex = _items.indexWhere((item) => item.product.id == product.id);
     
-    if (index >= 0) {
-      _items[index].quantity += quantity;
+    if (existingIndex >= 0) {
+      // Incrementar cantidad si ya existe
+      _items[existingIndex] = _items[existingIndex].copyWith(
+        quantity: _items[existingIndex].quantity + 1,
+      );
     } else {
-      _items.add(CartItem(product: product, quantity: quantity));
+      // Agregar nuevo item
+      _items.add(CartItem(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        product: product,
+        quantity: 1,
+      ));
     }
     
     notifyListeners();
   }
   
-  void updateQuantity(int productId, int quantity) {
-    if (quantity <= 0) {
-      removeFromCart(productId);
+  void removeFromCart(String itemId) {
+    _items.removeWhere((item) => item.id == itemId);
+    notifyListeners();
+  }
+  
+  void updateQuantity(String itemId, int newQuantity) {
+    if (newQuantity <= 0) {
+      removeFromCart(itemId);
       return;
     }
     
-    final index = _items.indexWhere((item) => item.product.id == productId);
-    
+    final index = _items.indexWhere((item) => item.id == itemId);
     if (index >= 0) {
-      _items[index].quantity = quantity;
+      _items[index] = _items[index].copyWith(quantity: newQuantity);
       notifyListeners();
     }
-  }
-  
-  void removeFromCart(int productId) {
-    _items.removeWhere((item) => item.product.id == productId);
-    notifyListeners();
   }
   
   void clearCart() {
     _items.clear();
     notifyListeners();
+  }
+  
+  bool isProductInCart(String productId) {
+    return _items.any((item) => item.product.id == productId);
   }
 }

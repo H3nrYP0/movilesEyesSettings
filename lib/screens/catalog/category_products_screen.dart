@@ -1,13 +1,13 @@
-// CORREGIDO - category_products_screen.dart
+// CORREGIDO - category_products_screen.dart CON CARRITO
 import 'package:flutter/material.dart';
 import 'package:optica_app/models/category_model.dart';
 import 'package:optica_app/core/services/product_service.dart';
 import 'package:optica_app/models/product_model.dart';
+import 'package:optica_app/screens/widgets/cart_floating_button.dart'; // ← NUEVA IMPORTACIÓN
 
 class CategoryProductsScreen extends StatefulWidget {
   final Category category;
   
-  // CONSTRUCTOR CORREGIDO - sin onProductSelected
   const CategoryProductsScreen({
     super.key,
     required this.category,
@@ -26,19 +26,17 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-    // CORREGIDO: category_products_screen.dart
-    @override
-    void initState() {
-      super.initState();
-      _searchController.addListener(_onSearchChanged);
-      
-      // Espera a que el widget esté montado y la UI esté lista
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _loadProducts();
-        }
-      });
-    }
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadProducts();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -71,40 +69,39 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
     });
   }
 
-  // También optimiza _loadProducts
-Future<void> _loadProducts() async {
-  if (!mounted) return;
-  
-  setState(() {
-    _isLoading = true;
-    _error = '';
-  });
-
-  await Future.delayed(const Duration(milliseconds: 100)); // Pequeño delay
-  
-  try {
-    final products = await _productService.getProductsByCategory(widget.category.id);
+  Future<void> _loadProducts() async {
+    if (!mounted) return;
     
-    if (mounted) {
-      setState(() {
-        _products = products;
-        _filteredProducts = List.from(products);
-      });
-    }
-  } catch (e) {
-    if (mounted) {
-      setState(() {
-        _error = 'Error al cargar productos: $e';
-      });
-    }
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+    setState(() {
+      _isLoading = true;
+      _error = '';
+    });
+
+    await Future.delayed(const Duration(milliseconds: 100));
+    
+    try {
+      final products = await _productService.getProductsByCategory(widget.category.id);
+      
+      if (mounted) {
+        setState(() {
+          _products = products;
+          _filteredProducts = List.from(products);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Error al cargar productos: $e';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-}
 
   void _navigateToProductDetail(Product product) {
     Navigator.pushNamed(
@@ -146,7 +143,7 @@ Future<void> _loadProducts() async {
 
   Widget _buildProductCard(Product product) {
     return GestureDetector(
-      onTap: () => _navigateToProductDetail(product), // ← Ahora usa este método
+      onTap: () => _navigateToProductDetail(product),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         decoration: BoxDecoration(
@@ -263,6 +260,9 @@ Future<void> _loadProducts() async {
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: _buildBody(),
+      // AGREGAR ESTO: Botón flotante del carrito
+      floatingActionButton: const CartFloatingButton(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
     );
   }
 

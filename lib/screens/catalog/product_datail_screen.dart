@@ -1,10 +1,11 @@
-// screens/catalog/product_detail_screen.dart
+// screens/catalog/product_detail_screen.dart - VERSIÓN CON CARRITO
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:optica_app/models/product_model.dart';
 import 'package:optica_app/providers/cart_provider.dart';
 import 'package:optica_app/providers/auth_provider.dart';
 import 'package:optica_app/screens/auth/login_screen.dart';
+import 'package:optica_app/screens/widgets/cart_floating_button.dart'; // ← NUEVA IMPORTACIÓN
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -41,7 +42,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     
     // Verificar si el usuario está autenticado
     if (!authProvider.isAuthenticated) {
-      // Redirigir al login
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -49,9 +49,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return;
     }
     
-    // Si está autenticado, agregar al carrito
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    cartProvider.addToCart(widget.product, _quantity);
+    
+    // Agregar el producto con la cantidad especificada
+    for (int i = 0; i < _quantity; i++) {
+      cartProvider.addToCart(widget.product);
+    }
     
     setState(() {
       _showSuccess = true;
@@ -101,7 +104,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   const SizedBox(height: 16),
                   
-                  // Espacio para imagen (placeholder por ahora)
+                  // Espacio para imagen
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
                     height: 300,
@@ -294,7 +297,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ],
                             ),
                           ),
-                        
+
                         // Mensaje de éxito
                         if (_showSuccess)
                           Container(
@@ -383,7 +386,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: authProvider.isAuthenticated 
-                    ? Colors.blue[600] 
+                    ? const Color(0xFF2E7D32)
                     : Colors.orange[600],
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -410,6 +413,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ],
       ),
+      // AGREGAR ESTO: Botón flotante del carrito
+      floatingActionButton: const CartFloatingButton(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
     );
   }
 }
